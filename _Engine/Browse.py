@@ -22,22 +22,28 @@ class Browse:
     def __init__(self):
         self.cache = _Engine.Cache()
 
-    def Get(self, url):
+    def Get(self, url:str, cache:bool=True, cacheValidTime:int=24):
         # response.raise_for_status()
 
         ParsedUrl = _url_parse(url)
 
-        if self.cache.exists(ParsedUrl):
-            print("[CACHE]")
-            self.content = self.cache.load(ParsedUrl)
+        if(cache):
+            if self.cache.exists(ParsedUrl):
+                print("[CACHE]")
+                self.content = self.cache.load(ParsedUrl)
+            else:
+                print("[REQUEST]")
+                response = requests.get(url)
+                response.raise_for_status()
+
+                self.cache.save(ParsedUrl, response.text, expire=cacheValidTime)
+                self.content = response.text
         else:
-            print("[REQUEST]")
             response = requests.get(url)
             response.raise_for_status()
 
-            self.cache.save(ParsedUrl, response.text)
+            self.cache.save(ParsedUrl, response.text, expire=cacheValidTime)
             self.content = response.text
-
         return self
 
     def content(self):
